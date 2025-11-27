@@ -1,11 +1,11 @@
 #include <stdio.h>
 
-int binarySearch(int arr[], int key) { // Issue to remember: Kept trying to type it as
+int binarySearch(int arr[], int key, int n) { // Issue to remember: Kept trying to type it as
 // variations of int[] arr, kept having a problem come up on bottom panel.
 
     int lhs = 0;
     int mid;
-    int rhs = sizeof(arr)-1;
+    int rhs = n-1;
     // In the bottom panel for VS Code (within the VB Ubuntu) is pointing out:
     // sizeof here is returning basically the pointer to that, but that's the point, no?
 
@@ -37,7 +37,7 @@ int main() { // doesn't need command-line parameters, so going with no parameter
     // I'll figure out regular I/O later on.
     printf("Array is from zero to nine, inclusive. My test number will be: %d.\n", x);
 
-    result = binarySearch(arr, x);
+    result = binarySearch(arr, x, sizeof(arr)/sizeof(arr[0]));
 
     if (result == -1) {
         printf("%d was not found in this array.\n", x);
@@ -47,7 +47,7 @@ int main() { // doesn't need command-line parameters, so going with no parameter
 
     printf("Now testing an expected fail, number: %d\n", y);
 
-    result = binarySearch(arr, y);
+    result = binarySearch(arr, y, sizeof(arr)/sizeof(arr[0]));
 
     if (result == -1) {
         printf("%d was not found in the array, cool!\n", y);

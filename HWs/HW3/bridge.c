@@ -13,6 +13,30 @@ int turn = 0;
 #define LIMIT 25
 int direction = 0;
 
+
+// // Waiting Queue
+// typedef struct {
+//     int value;
+//     struct process *list;
+// } semaphore;
+
+// wait(semaphore *S) {
+//     S->value--;
+//     if (S->value < 0) {
+//         // add this proc to S->list
+//         block();
+//     }
+// }
+// signal(semaphore *S) {
+//     S->value++;
+//     if(S->value <= 0) {
+//         // remove proc p from s->list
+//         // wakeup(P);
+//     }
+// }
+
+
+
 int main()
 {
 

@@ -3,52 +3,35 @@
 #include <pthread.h>
 #include <unistd.h> // for sleep()
 
-// struct BridgeControl {
-// };
-
 pthread_mutex_t mutex;
 char *northFarmer = "North Tunbridge";
 char *southFarmer = "South Tunbridge";
-int turn = 0;
-#define LIMIT 25
+#define LIMIT 10 // There were soo many with 25 so I'm shrinking it (hw didn't specify how many I think? but I started with 25)
 int direction = 0;
 
+pthread_cond_t northCondition;
+pthread_cond_t southCondition;
 
-// // Waiting Queue
-// typedef struct {
-//     int value;
-//     struct process *list;
-// } semaphore;
-
-// wait(semaphore *S) {
-//     S->value--;
-//     if (S->value < 0) {
-//         // add this proc to S->list
-//         block();
-//     }
-// }
-// signal(semaphore *S) {
-//     S->value++;
-//     if(S->value <= 0) {
-//         // remove proc p from s->list
-//         // wakeup(P);
-//     }
-// }
-
-
+void *northActivity(void *params);
+void *southActivity(void *param);
 
 int main()
 {
-
     pthread_mutex_init(&mutex, NULL);
+    pthread_cond_init(&northCondition, NULL);
+    pthread_cond_init(&southCondition, NULL);
 
     pthread_t north, south;
 
-    pthread_create(&north, NULL, northActivity, (void*) northFarmer);
-    pthread_create(&south, NULL, southActivity, (void*) southFarmer);
+    pthread_create(&north, NULL, northActivity, (void *)northFarmer);
+    pthread_create(&south, NULL, southActivity, (void *)southFarmer);
 
     pthread_join(north, NULL);
     pthread_join(south, NULL);
+
+    pthread_mutex_destroy(&mutex);
+    pthread_cond_destroy(&northCondition);
+    pthread_cond_destroy(&southCondition);
 
     exit(0);
 
@@ -59,34 +42,57 @@ int main()
 
 void *northActivity(void *params)
 {
-    if (direction!=0) ;
-    while (turn <= LIMIT && direction==0)
+    int turn = 0;
+    char *msg = (char *)params;
+    while (1)
     {
         pthread_mutex_lock(&mutex);
-        char *msg = (char *)params;
+        if (turn >= LIMIT)
+        {
+            pthread_cond_signal(&southCondition);
+            pthread_mutex_unlock(&mutex);
+            return NULL;
+        }
+        while (direction != 0)
+        {
+            pthread_cond_wait(&northCondition, &mutex);
+        }
         turn++;
         printf("%s #%d farmer can cross the bridge\n", msg, turn);
-        printf("%s is traveling", msg);
-        sleep(rand() % 2);
-        printf("%s farmer is leaving the bridge.", msg);
-        direction=1;
+        printf("%s #%d is traveling on the bridge\n", msg, turn);
+        sleep(1 + rand() % 2);
+        printf("%s #%d farmer has left the bridge\n", msg, turn);
+
+        direction = 1;
+        pthread_cond_signal(&southCondition);
         pthread_mutex_unlock(&mutex);
     }
 }
 
 void *southActivity(void *param)
 {
-    if (direction!=1) ;
-    while (turn <= LIMIT && direction==1)
+    int turn = 0;
+    char *msg = (char *)param;
+    while (1)
     {
         pthread_mutex_lock(&mutex);
-        char *msg = (char *)param;
+        if (turn >= LIMIT)
+        {
+            pthread_cond_signal(&northCondition);
+            pthread_mutex_unlock(&mutex);
+            return NULL;
+        }
+        while (direction != 1)
+        {
+            pthread_cond_wait(&southCondition, &mutex);
+        }
         turn++;
         printf("%s #%d farmer can cross the bridge\n", msg, turn);
-        printf("%s is traveling\n", msg);
-        sleep(1 + (rand() % 2));
-        printf("%s farmer is leaving the bridge.\n", msg);
-        direction=0;
+        printf("%s #%d is traveling on the bridge\n", msg, turn);
+        sleep(1 + rand() % 2);
+        printf("%s #%d farmer has left the bridge\n", msg, turn);
+        direction = 0;
+        pthread_cond_signal(&northCondition);
         pthread_mutex_unlock(&mutex);
     }
 }
